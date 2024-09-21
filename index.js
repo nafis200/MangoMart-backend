@@ -59,24 +59,10 @@ const client = new MongoClient(uri, {
           req.decoded = decoded
           next()
       })
-        //  const token = req.cookies?.token 
-        // //  console.log('value of verify token',token);
-        //  if(!token){
-        //    return res.status(401).send({message: 'not autorized'})
-        //  }
-        //  jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
-        //   if(err){
-        //     console.log(err);
-        //     return res.status(401).send({message: 'unauthorized'})
-        //   }
-        //   req.user = decoded
-        //   next()
-        //  })
-       
          
     }
   
-
+// 
     app.post('/jwt',async(req,res)=>{
        const user = req.body 
        const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET ,{expiresIn: '1000h'})
