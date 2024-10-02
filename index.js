@@ -123,19 +123,19 @@ async function run() {
       
       const user = req.body
       const {data} = user 
-      console.log(data);
-      const {email,name,Phone_number,date,quantity,amount} = data
+      const {email,name,Phone_number,date,quantity,amount,id} = data
       
       
       const tranId = new ObjectId().toString()
       const initiatedata = {
         store_id:"abcco66659d6617872",
         store_passwd:"abcco66659d6617872@ssl",
-        total_amount:100,
+        total_amount:quantity,
+        num_of_item:quantity,
         currency:"BDT",
-        tran_id:tranId,
+        tran_id:id,
         success_url:"http://localhost:5000/success-payment",
-        fail_url:"http://localhost:5173/failure",
+        fail_url:"http://localhost:5000/failure-payment",
         cancel_url:"http://yoursite.com/cancel.php&",
         cus_name:name,
         cus_email:email,
@@ -146,7 +146,7 @@ async function run() {
         cus_postcode:"1000",
         cus_country:"Bangladesh",
         cus_phone:Phone_number,
-        cus_fax:"01711111111",
+        cus_fax:quantity,
         shipping_method:"NO",
         product_name:"Laptop",
         product_category:"Mango",
@@ -155,7 +155,7 @@ async function run() {
         value_a:"ref001_A",
         value_b:"ref002_B",
         value_c:"ref003_C",
-        value_d:"ref004_D"
+        value_d:"ref004_D",
       }
         
     const response = await axios({
@@ -171,7 +171,8 @@ async function run() {
        paymnetId:tranId,
        amount:amount,
        quantity:quantity,
-       status:"pending"
+       status:"pending",
+       email:email
     }
 
     const save = await paymentCollection.insertOne(saveData)
@@ -186,6 +187,8 @@ async function run() {
 
 app.post('/success-payment',async(req,res)=>{
        const successData = req.body 
+      const {tran_id, amount} = successData 
+       
        if(successData.status !== "VALID"){
         throw new Error("unauthorized,payment","invalid payment")
        }
@@ -197,8 +200,23 @@ app.post('/success-payment',async(req,res)=>{
            status:"success",
          }
       }
+
+      const queries = {
+        _id: new ObjectId(tran_id)
+      }
+      const updates = {
+         $inc:{
+            quantity:  -parseInt(amount)
+         }
+      }
       const save = await paymentCollection.updateOne(query,update)
+      const save1 = await MangoCollection.updateOne(queries,updates)
+      
       res.redirect('http://localhost:5173/success')
+ })
+
+ app.post('/failure-payment',async(req,res)=>{
+  res.redirect('http://localhost:5173/failure')
  })
 
    
