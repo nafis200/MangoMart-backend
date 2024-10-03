@@ -126,11 +126,12 @@ async function run() {
       res.send(result)
     })
 
-    app.patch('/Quantityreduce',async(req,res)=>{
-        const user = req.body;
-        console.log(user);
-        
-    })
+    app.get("/information/:email",async(req,res)=>{
+      const email = req.params.email  
+      const query = { email: email };
+      const existingUser = await paymentCollection.find(query).toArray(); 
+      res.send(existingUser)
+   })
 
     //  mango collection
 
