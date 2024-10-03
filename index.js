@@ -88,10 +88,10 @@ async function run() {
 
     app.post("/create-payment-intent", async (req, res) => {
       const user = req.body;
-      console.log(user);
-      console.log("hellow");
+      const {totalprice} = user 
+
       try {
-        const price = 100;
+        const price = totalprice;
         const amount = parseInt(price * 100);
 
         const paymentIntent = await stripe.paymentIntents.create({
@@ -109,6 +109,28 @@ async function run() {
         });
       }
     });
+
+    app.post('/Moneysave',async(req,res)=>{
+      const user = req.body;
+      const result = await paymentCollection.insertOne(user);
+      const {quantity,id} = user
+      const queries = {
+        _id: new ObjectId(id)
+      }
+      const updates = {
+         $inc:{
+            quantity:  -parseInt(quantity)
+         }
+      }
+      const save1 = await MangoCollection.updateOne(queries,updates)
+      res.send(result)
+    })
+
+    app.patch('/Quantityreduce',async(req,res)=>{
+        const user = req.body;
+        console.log(user);
+        
+    })
 
     //  mango collection
 
