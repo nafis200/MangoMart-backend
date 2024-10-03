@@ -72,6 +72,12 @@ async function run() {
         .send({ success: true });
     });
 
+    //  --------- users ----------
+    app.get('/users',async(req,res)=>{
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    })
+
     app.post("/users", async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
@@ -84,7 +90,27 @@ async function run() {
       res.send(result);
     });
 
-    //  stripe payment gateway
+
+    app.patch('/users/admin/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          role: 'admin'
+        }
+      }
+      const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    })
+    
+    app.delete('/users/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    })
+
+    //  stripe payment gateway.......................... stripe payment
 
     app.post("/create-payment-intent", async (req, res) => {
       const user = req.body;
@@ -133,14 +159,14 @@ async function run() {
       res.send(existingUser)
    })
 
-    //  mango collection
+    //  mango collection.............................................
 
     app.get("/mangoInformation", async (req, res) => {
       const result = await MangoCollection.find().toArray();
       res.send(result);
     });
 
-    // SSL Commerce 
+    // SSL Commerce.........................................................
 
     app.post('/sslComerece',async(req,res)=>{
       
@@ -223,7 +249,7 @@ app.post('/success-payment',async(req,res)=>{
            status:"success",
          }
       }
-
+// 
       const queries = {
         _id: new ObjectId(tran_id)
       }
@@ -232,7 +258,11 @@ app.post('/success-payment',async(req,res)=>{
             quantity:  -parseInt(amount)
          }
       }
+      console.log("comming");
+      
       const save = await paymentCollection.updateOne(query,update)
+      console.log(save);
+      
       const save1 = await MangoCollection.updateOne(queries,updates)
       
       res.redirect('http://localhost:5173/success')
