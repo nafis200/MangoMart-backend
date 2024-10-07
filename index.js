@@ -11,7 +11,7 @@ const { default: axios } = require("axios");
 
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "https://mangomart.web.app","https://mangomart.firebaseapp.com"],
     credentials: true,
   })
 );
