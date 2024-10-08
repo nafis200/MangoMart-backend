@@ -265,11 +265,11 @@ app.post('/success-payment',async(req,res)=>{
       
       const save1 = await MangoCollection.updateOne(queries,updates)
       
-      res.redirect('http://localhost:5173/success')
+      res.redirect('https://mangomart.web.app/success')
  })
 
  app.post('/failure-payment',async(req,res)=>{
-  res.redirect('http://localhost:5173/failure')
+  res.redirect('https://mangomart.web.app/failure')
  })
 
    
