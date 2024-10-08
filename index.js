@@ -1,3 +1,4 @@
+
 const express = require("express");
 const app = express();
 require("dotenv").config();
@@ -11,7 +12,7 @@ const { default: axios } = require("axios");
 
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "https://mangomart.web.app","https://mangomart.firebaseapp.com"],
     credentials: true,
   })
 );
@@ -73,7 +74,7 @@ async function run() {
     });
 
     //  --------- users ----------
-    app.get('/users', async (req, res) => {
+    app.get('/users',async(req,res)=>{
       const result = await userCollection.find().toArray();
       res.send(result);
     })
@@ -102,7 +103,7 @@ async function run() {
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
     })
-
+    
     app.delete('/users/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
@@ -110,12 +111,11 @@ async function run() {
       res.send(result);
     })
 
-    //  stripe payment gateway
     //  stripe payment gateway.......................... stripe payment
 
     app.post("/create-payment-intent", async (req, res) => {
       const user = req.body;
-      const { totalprice } = user
+      const {totalprice} = user 
 
       try {
         const price = totalprice;
@@ -137,28 +137,28 @@ async function run() {
       }
     });
 
-    app.post('/Moneysave', async (req, res) => {
+    app.post('/Moneysave',async(req,res)=>{
       const user = req.body;
       const result = await paymentCollection.insertOne(user);
-      const { quantity, id } = user
+      const {quantity,id} = user
       const queries = {
         _id: new ObjectId(id)
       }
       const updates = {
-        $inc: {
-          quantity: -parseInt(quantity)
-        }
+         $inc:{
+            quantity:  -parseInt(quantity)
+         }
       }
-      const save1 = await MangoCollection.updateOne(queries, updates)
+      const save1 = await MangoCollection.updateOne(queries,updates)
       res.send(result)
     })
 
-    app.get("/information/:email", async (req, res) => {
-      const email = req.params.email
+    app.get("/information/:email",async(req,res)=>{
+      const email = req.params.email  
       const query = { email: email };
-      const existingUser = await paymentCollection.find(query).toArray();
+      const existingUser = await paymentCollection.find(query).toArray(); 
       res.send(existingUser)
-    })
+   })
 
     //  mango collection.............................................
 
@@ -169,120 +169,113 @@ async function run() {
 
     // SSL Commerce.........................................................
 
-    app.post('/sslComerece', async (req, res) => {
-
+    app.post('/sslComerece',async(req,res)=>{
+      
       const user = req.body
-      const { data } = user
-      const { email, name, Phone_number, date, quantity, amount, id } = data
-
-
+      const {data} = user 
+      const {email,name,Phone_number,date,quantity,amount,id} = data
+      
+      
       const tranId = new ObjectId().toString()
       const initiatedata = {
-        store_id: "abcco66659d6617872",
-        store_passwd: "abcco66659d6617872@ssl",
-        total_amount: quantity,
-        num_of_item: quantity,
-        currency: "BDT",
-        tran_id: id,
-        success_url: "http://localhost:5000/success-payment",
-        fail_url: "http://localhost:5000/failure-payment",
-        cancel_url: "http://yoursite.com/cancel.php&",
-        cus_name: name,
-        cus_email: email,
-        cus_add1: "Dhaka",
-        cus_add2: "Dhaka",
-        cus_city: "Dhaka",
-        cus_state: "Dhaka",
-        cus_postcode: "1000",
-        cus_country: "Bangladesh",
-        cus_phone: Phone_number,
-        cus_fax: quantity,
-        shipping_method: "NO",
-        product_name: "Laptop",
-        product_category: "Mango",
-        product_profile: "general",
-        multi_card_name: "mastercard,visacard,amexcard",
-        value_a: "ref001_A",
-        value_b: "ref002_B",
-        value_c: "ref003_C",
-        value_d: "ref004_D",
+        store_id:"abcco66659d6617872",
+        store_passwd:"abcco66659d6617872@ssl",
+        total_amount:quantity,
+        num_of_item:quantity,
+        currency:"BDT",
+        tran_id:id,
+        success_url:"https://backend-two-theta-46.vercel.app/success-payment",
+        fail_url:"https://backend-two-theta-46.vercel.app/failure-payment",
+        cancel_url:"http://yoursite.com/cancel.php&",
+        cus_name:name,
+        cus_email:email,
+        cus_add1:"Dhaka",
+        cus_add2:"Dhaka",
+        cus_city:"Dhaka",
+        cus_state:"Dhaka",
+        cus_postcode:"1000",
+        cus_country:"Bangladesh",
+        cus_phone:Phone_number,
+        cus_fax:quantity,
+        shipping_method:"NO",
+        product_name:"Laptop",
+        product_category:"Mango",
+        product_profile:"general",
+        multi_card_name:"mastercard,visacard,amexcard",
+        value_a:"ref001_A",
+        value_b:"ref002_B",
+        value_c:"ref003_C",
+        value_d:"ref004_D",
       }
+        
+    const response = await axios({
+      method:"POST",
+      url:"https://sandbox.sslcommerz.com/gwprocess/v4/api.php",
+      data:initiatedata,
+      headers:{
+        "Content-Type":"application/x-www-form-urlencoded",
+      },
+    })
+    
+    const saveData = {
+       paymnetId:tranId,
+       amount:amount,
+       quantity:quantity,
+       status:"pending",
+       email:email
+    }
 
-      const response = await axios({
-        method: "POST",
-        url: "https://sandbox.sslcommerz.com/gwprocess/v4/api.php",
-        data: initiatedata,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+    const save = await paymentCollection.insertOne(saveData)
+
+    if(save){
+      res.send({
+        paymentUrl:response.data.GatewayPageURL,
       })
 
-      const saveData = {
-        paymnetId: tranId,
-        amount: amount,
-        quantity: quantity,
-        status: "pending",
-        email: email
-      }
+    }
+})
 
-      const save = await paymentCollection.insertOne(saveData)
-
-      if (save) {
-        res.send({
-          paymentUrl: response.data.GatewayPageURL,
-        })
-
-      }
-    })
-
-    app.post('/success-payment', async (req, res) => {
-      const successData = req.body
-      const { tran_id, amount } = successData
-
-      if (successData.status !== "VALID") {
-        throw new Error("unauthorized,payment", "invalid payment")
-      }
+app.post('/success-payment',async(req,res)=>{
+       const successData = req.body 
+      const {tran_id, amount} = successData 
+       
+       if(successData.status !== "VALID"){
+        throw new Error("unauthorized,payment","invalid payment")
+       }
       const query = {
         paymnetId: successData.tran_id
       }
       const update = {
-        $set: {
-          status: "success",
-        }
+         $set:{
+           status:"success",
+         }
       }
-      // 
+
       const queries = {
         _id: new ObjectId(tran_id)
       }
       const updates = {
-        $inc: {
-          quantity: -parseInt(amount)
-        }
+         $inc:{
+            quantity:  -parseInt(amount)
+         }
       }
       console.log("comming");
-
-      const save = await paymentCollection.updateOne(query, update)
+      
+      const save = await paymentCollection.updateOne(query,update)
       console.log(save);
+      
+      const save1 = await MangoCollection.updateOne(queries,updates)
+      
+      res.redirect('https://mangomart.web.app/success')
+ })
 
-      const save1 = await MangoCollection.updateOne(queries, updates)
+ app.post('/failure-payment',async(req,res)=>{
+  res.redirect('https://mangomart.web.app/failure')
+ })
 
-      res.redirect('http://localhost:5173/success')
-    })
+   
 
-    app.post('/failure-payment', async (req, res) => {
-      res.redirect('http://localhost:5173/failure')
-    })
-
-    // -------- payemnts --------
-    app.get('/payments', async (req, res) => {
-      const result = await paymentCollection.find().toArray();
-      res.send(result);
-      // console.log('premium Request  info', premiumRequest);
-      // res.send(premiumRequestResult );
-    });
-
-
-
+    
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
@@ -292,9 +285,9 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("MangoMart is Running");
+  res.send("Hello World! it s me how are you i am localhost");
 });
 
 app.listen(port, () => {
-  console.log(`MangoMart is running on port ${port}`);
+  console.log(`Example app listening on port ${port}`);
 });
